@@ -7,16 +7,19 @@
 [![Rating](https://img.shields.io/visual-studio-marketplace/r/renato-duarte.latex-citation-assistant)](https://marketplace.visualstudio.com/items?itemName=renato-duarte.latex-citation-assistant)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-![Screenshot](resources/screenshot.png)
+<!-- TODO: add screenshots once captured -->
+<!-- ![Citation panel](resources/screenshots/citation-panel.png) -->
 
-Stop manually searching for references. LaTeX Citation Assistant reads the text around your cursor, extracts key terms using lightweight NLP, searches your Zotero library and Semantic Scholar in parallel, and presents ranked results -- all in under a second. Select a paper and the citation command is inserted at your cursor. No AI models, no cloud processing of your manuscript, no API keys required for basic use.
+Stop manually searching for references. LaTeX Citation Assistant reads the text around your cursor, extracts key terms, searches your Zotero library and Semantic Scholar in parallel, and presents ranked results in a rich side panel. Select a paper and the citation command is inserted at your cursor.
+
+**No API keys required for basic use** -- Semantic Scholar works out of the box, and the built-in NLP pipeline handles context extraction and ranking locally. Optionally enable LLM-powered mode (Anthropic or OpenAI) for dramatically better query generation and relevance scoring.
 
 ---
 
 ## Features
 
 ### Context-Aware Citation Suggestions
-The extension analyzes the sentences around your cursor to understand what you are writing about. It extracts key terms -- including multi-word phrases, acronyms, and section-relevant vocabulary -- without relying on any AI or language model. The extracted terms drive targeted searches against your configured citation sources.
+The extension analyzes the sentences around your cursor to understand what you are writing about. The built-in NLP pipeline extracts key terms -- including multi-word phrases, acronyms, and section-relevant vocabulary -- entirely locally. The extracted terms drive targeted searches against your configured citation sources.
 
 ### Dual-Source Search: Zotero + Semantic Scholar
 Search your personal Zotero library and the Semantic Scholar academic database simultaneously. Results from both sources are merged, deduplicated, and displayed in a single ranked list with clear source indicators so you always know where each suggestion came from.
@@ -36,6 +39,15 @@ Choose the citation command that matches your LaTeX setup: `\cite`, `\citep`, `\
 ### NLP-Inspired Term Extraction
 The context extraction pipeline uses frequency analysis, capitalization detection, acronym recognition, n-gram assembly (bigrams and trigrams), and section-aware boosting to identify the most relevant terms from your writing. No external NLP libraries or machine learning models are required.
 
+### LLM-Enhanced Mode (Optional)
+Enable LLM-powered search for significantly better results. When activated, the extension uses a lightweight language model (Claude Haiku or GPT-4o-mini) to:
+
+- **Generate targeted search queries** from your writing context (4-6 precise academic phrases instead of keyword extraction)
+- **Produce a hypothetical abstract** describing the ideal paper to cite, used for SPECTER embedding-based search via the Semantic Scholar Recommendations API
+- **Re-rank results by contextual relevance** -- the LLM scores each candidate paper against your specific paragraph and explains why it is relevant
+
+The LLM never sees your full manuscript -- only the paragraph around your cursor and a list of candidate paper titles/abstracts. LLM mode is off by default and requires an Anthropic or OpenAI API key.
+
 ---
 
 ## Quick Start
@@ -51,6 +63,11 @@ The context extraction pipeline uses frequency analysis, capitalization detectio
 3. **Use it**: Open a `.tex` file, place your cursor where you want a citation, and press `Ctrl+Shift+Z` (or `Cmd+Shift+Z` on macOS). Select a paper from the ranked suggestions and the citation is inserted.
 
 Semantic Scholar works out of the box with no configuration. An optional API key can be added for higher rate limits.
+
+4. **Enable LLM mode** (optional, for better results):
+   - Set `latexCite.llm.enabled` to `true` in VS Code Settings.
+   - Choose a provider (`anthropic` or `openai`) and enter your API key.
+   - The default models (Claude Haiku / GPT-4o-mini) are fast and inexpensive.
 
 ---
 
@@ -81,12 +98,16 @@ All settings are under the `latexCite` namespace. Open Settings and search for "
 | `latexCite.suggestionsBibFile` | string | `"suggestions.bib"` | BibTeX file for Semantic Scholar entries, relative to workspace root |
 | `latexCite.citationCommand` | string | `"\\cite"` | LaTeX citation command to insert. Options: `\cite`, `\citep`, `\citet`, `\parencite`, `\textcite`, `\autocite` |
 | `latexCite.excludeCited` | boolean | `true` | Demote papers already cited in the document (they receive a -50 point penalty in ranking) |
+| `latexCite.llm.enabled` | boolean | `false` | Enable LLM-powered query generation and re-ranking |
+| `latexCite.llm.provider` | string | `"anthropic"` | LLM provider: `anthropic` (Claude Haiku) or `openai` (GPT-4o-mini) |
+| `latexCite.llm.apiKey` | string | `""` | API key for the selected LLM provider |
+| `latexCite.llm.model` | string | `""` | Optional model override (leave empty for provider defaults) |
 
 ---
 
 ## How It Works
 
-The extension operates as a three-stage pipeline, all running locally except for the API calls to Zotero and Semantic Scholar.
+The extension operates as a three-stage pipeline. In the default NLP mode, everything runs locally except for the API calls to Zotero and Semantic Scholar. With LLM mode enabled, stages 1 and 3 are augmented with LLM calls for better query generation and relevance scoring.
 
 ### Stage 1: Context Extraction
 
@@ -101,12 +122,15 @@ When you invoke the suggest command, the extension reads up to 2000 characters b
 
 The top 8-12 terms are returned as search queries.
 
+**With LLM mode enabled**, the NLP terms are supplemented (or replaced) by LLM-generated queries. The LLM receives the current paragraph and section context, and returns 4-6 precise academic search phrases, a hypothetical abstract for embedding-based search, and a list of key terms. If the LLM call fails, the extension falls back to NLP terms automatically.
+
 ### Stage 2: Parallel Search
 
 The extracted key terms are sent to each enabled source simultaneously:
 
 - **Zotero**: Multiple overlapping queries are constructed from term groups and executed in parallel against the Zotero Web API v3. Results are deduplicated by item key.
 - **Semantic Scholar**: The top 5-6 terms are joined into a single focused query sent to the Academic Graph API. BibTeX entries are generated on the fly for each result.
+- **Semantic Scholar Recommendations** (LLM mode only): The hypothetical abstract is used to seed the S2 Recommendations API, which returns papers with similar SPECTER embeddings. This surfaces semantically related papers that keyword search might miss.
 
 Both searches use `Promise.allSettled`, so a failure in one source does not block results from the other. Per-source timing statistics are logged for diagnostics.
 
@@ -125,6 +149,8 @@ All results are merged and scored on a 0-100 scale:
 | Already-cited penalty | -50 | Papers already cited in the document are demoted |
 
 After scoring, results are normalized so the best result maps to 100 and the worst to 0, then sorted in descending order. Cross-source duplicates (matched by DOI or title similarity via the Dice coefficient) are merged, with Zotero entries preferred but inheriting Semantic Scholar citation counts.
+
+**With LLM mode enabled**, the top 20 candidates from heuristic ranking are sent to the LLM for re-ranking. The LLM scores each paper 1-10 based on how well it supports the specific claim or topic in your paragraph, and attaches a short relevance explanation (displayed as a badge on the result card). Scores are mapped back to the 0-100 scale. If the LLM call fails, heuristic scores are preserved.
 
 ---
 
@@ -156,6 +182,7 @@ The writer checks for duplicate keys before appending, so running the command mu
   - Create a key at [zotero.org/settings/keys](https://www.zotero.org/settings/keys) with "Allow library access" enabled
   - Note your numeric User ID from the same page
 - **Semantic Scholar API key** (optional, for higher rate limits -- basic use works without one)
+- **Anthropic or OpenAI API key** (optional, required only for LLM-enhanced mode)
 
 ---
 
@@ -165,13 +192,13 @@ The writer checks for duplicate keys before appending, so running the command mu
 No. Either source works independently. Zotero searches your personal library; Semantic Scholar searches the broader academic literature. Using both gives you the best results: your own curated references plus new discoveries.
 
 **Q: Does this extension send my manuscript to any server?**
-No. Only the extracted search terms (typically 8-12 words) are sent to the Zotero and Semantic Scholar APIs. Your manuscript text stays local.
+In NLP mode (default), only the extracted search terms (typically 8-12 words) are sent to the Zotero and Semantic Scholar APIs. Your manuscript text stays local. In LLM mode, the paragraph around your cursor is also sent to the configured LLM provider -- see the LLM FAQ entries below for details.
 
 **Q: Why are my Zotero results not showing?**
 Check that you have entered both your API key and User ID in the extension settings. You can verify your credentials at [zotero.org/settings/keys](https://www.zotero.org/settings/keys). Use the "Analyze Document Context" command to see what terms the extension is extracting.
 
 **Q: How does the extension decide which terms to search for?**
-It uses a lightweight NLP pipeline that scores words by frequency, capitalization, acronym patterns, and section context. No machine learning models are involved. Use the "Analyze Document Context" command to inspect the extracted terms.
+By default, it uses a lightweight NLP pipeline that scores words by frequency, capitalization, acronym patterns, and section context. With LLM mode enabled, the model generates more precise academic search phrases. Use the "Analyze Document Context" command to inspect the extracted terms.
 
 **Q: Can I use this with `biblatex` commands like `\parencite`?**
 Yes. Change the `latexCite.citationCommand` setting to your preferred command. All standard `natbib` and `biblatex` citation commands are supported.
@@ -184,6 +211,15 @@ Yes. The extension reads Better BibTeX citation keys from the Zotero `extra` fie
 
 **Q: Can I adjust how many sentences the extension reads for context?**
 Yes. Change `latexCite.contextSentences` (1-5). More sentences provide broader context but may introduce noise for very specific citation needs. The default of 2 works well for most writing.
+
+**Q: What does LLM mode do and is it worth enabling?**
+LLM mode uses a lightweight language model to generate better search queries and re-rank results by contextual relevance. It typically produces noticeably better suggestions, especially for nuanced or interdisciplinary topics. The trade-off is slightly longer search times (~5-15s extra) and the cost of API calls (fractions of a cent per invocation with Haiku or GPT-4o-mini).
+
+**Q: Does LLM mode send my manuscript to a cloud service?**
+Only the paragraph around your cursor (typically 2-5 sentences) and the candidate paper metadata (titles and truncated abstracts) are sent to the LLM provider. Your full manuscript is never transmitted.
+
+**Q: What happens if the LLM call fails?**
+The extension falls back gracefully to the NLP pipeline at every stage. If LLM query generation fails, NLP terms are used. If LLM re-ranking fails, heuristic scores are preserved. You always get results.
 
 ---
 
