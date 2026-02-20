@@ -1,0 +1,191 @@
+{
+  "name": "latex-citation-assistant",
+  "displayName": "LaTeX Citation Assistant",
+  "description": "Context-aware citation suggestions from Zotero and Semantic Scholar for LaTeX documents. Analyzes your writing context, searches multiple academic databases, and inserts properly formatted citations.",
+  "version": "1.0.0",
+  "publisher": "renato-duarte",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other",
+    "Education"
+  ],
+  "keywords": [
+    "latex",
+    "citations",
+    "zotero",
+    "semantic scholar",
+    "academic",
+    "research",
+    "bibtex",
+    "bibliography",
+    "reference management"
+  ],
+  "icon": "resources/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/renato-duarte/latex-citation-assistant"
+  },
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:latex",
+    "onLanguage:tex"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "latex-cite.suggest",
+        "title": "Suggest Citations from Context",
+        "icon": "$(search)",
+        "category": "LaTeX Citations"
+      },
+      {
+        "command": "latex-cite.suggestZotero",
+        "title": "Search Zotero Library",
+        "icon": "$(library)",
+        "category": "LaTeX Citations"
+      },
+      {
+        "command": "latex-cite.suggestSemanticScholar",
+        "title": "Search Semantic Scholar",
+        "icon": "$(globe)",
+        "category": "LaTeX Citations"
+      },
+      {
+        "command": "latex-cite.analyzeContext",
+        "title": "Analyze Document Context",
+        "icon": "$(info)",
+        "category": "LaTeX Citations"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "latex-cite.suggest",
+        "key": "ctrl+shift+z",
+        "mac": "cmd+shift+z",
+        "when": "editorTextFocus && (editorLangId == latex || editorLangId == tex)"
+      },
+      {
+        "command": "latex-cite.suggestSemanticScholar",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s",
+        "when": "editorTextFocus && (editorLangId == latex || editorLangId == tex)"
+      }
+    ],
+    "configuration": {
+      "title": "LaTeX Citation Assistant",
+      "properties": {
+        "latexCite.zotero.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Zotero library search"
+        },
+        "latexCite.zotero.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Your Zotero API key (get from https://www.zotero.org/settings/keys)"
+        },
+        "latexCite.zotero.userId": {
+          "type": "string",
+          "default": "",
+          "description": "Your Zotero user ID (found on the same page as API key)"
+        },
+        "latexCite.semanticScholar.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Semantic Scholar search for papers outside your library"
+        },
+        "latexCite.semanticScholar.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Optional Semantic Scholar API key for higher rate limits (get from https://www.semanticscholar.org/product/api#api-key)"
+        },
+        "latexCite.maxResults": {
+          "type": "number",
+          "default": 20,
+          "minimum": 5,
+          "maximum": 50,
+          "description": "Maximum number of citation suggestions to display"
+        },
+        "latexCite.contextSentences": {
+          "type": "number",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Number of sentences before the cursor to use as context"
+        },
+        "latexCite.suggestionsBibFile": {
+          "type": "string",
+          "default": "suggestions.bib",
+          "description": "BibTeX file for Semantic Scholar suggestions (relative to workspace root)"
+        },
+        "latexCite.citationCommand": {
+          "type": "string",
+          "default": "\\cite",
+          "enum": [
+            "\\cite",
+            "\\citep",
+            "\\citet",
+            "\\parencite",
+            "\\textcite",
+            "\\autocite"
+          ],
+          "description": "LaTeX citation command to use when inserting citations"
+        },
+        "latexCite.excludeCited": {
+          "type": "boolean",
+          "default": true,
+          "description": "Exclude papers already cited in the document from suggestions"
+        },
+        "latexCite.llm.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable LLM-powered query generation and re-ranking for dramatically better search relevance"
+        },
+        "latexCite.llm.provider": {
+          "type": "string",
+          "default": "anthropic",
+          "enum": [
+            "anthropic",
+            "openai"
+          ],
+          "enumDescriptions": [
+            "Anthropic (Claude Haiku) — fast, accurate, recommended",
+            "OpenAI (GPT-4o-mini) — alternative provider"
+          ],
+          "description": "LLM provider for query generation and re-ranking"
+        },
+        "latexCite.llm.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for the selected LLM provider"
+        },
+        "latexCite.llm.model": {
+          "type": "string",
+          "default": "",
+          "description": "Optional model override (leave empty for provider default: claude-haiku-4-5-20251001 or gpt-4o-mini)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "^18.0.0",
+    "@types/mocha": "^10.0.0",
+    "@vscode/test-electron": "^2.3.0",
+    "typescript": "^5.3.0",
+    "mocha": "^10.2.0"
+  }
+}
