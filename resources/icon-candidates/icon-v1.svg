@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tileGrad" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+  <g id="tile">
+    <rect x="0" y="0" width="256" height="256" rx="56" ry="56" fill="url(#tileGrad)"/>
+  </g>
+  <g id="mark" fill="#F8FAFC">
+    <!-- Left bracket: outer rect minus inner notch -->
+    <path id="bracket-left" fill-rule="evenodd" d="
+      M 60 64
+      h 40
+      v 22
+      h -18
+      v 84
+      h 18
+      v 22
+      h -40
+      z"/>
+    <!-- Right bracket -->
+    <path id="bracket-right" fill-rule="evenodd" d="
+      M 196 64
+      h -40
+      v 22
+      h 18
+      v 84
+      h -18
+      v 22
+      h 40
+      z"/>
+    <!-- Centered double-quote glyph (citation = quote) -->
+    <g id="quote">
+      <path d="
+        M 110 90
+        q -16 6 -16 26
+        q 0 16 14 16
+        q 11 0 11 -12
+        q 0 -10 -9 -11
+        q 4 -12 14 -16
+        z"/>
+      <path d="
+        M 146 90
+        q -16 6 -16 26
+        q 0 16 14 16
+        q 11 0 11 -12
+        q 0 -10 -9 -11
+        q 4 -12 14 -16
+        z"/>
+    </g>
+  </g>
+</svg>

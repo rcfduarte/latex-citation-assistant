@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tileGrad" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+  <g id="tile">
+    <rect x="0" y="0" width="256" height="256" rx="56" ry="56" fill="url(#tileGrad)"/>
+  </g>
+  <g id="mark" fill="#F8FAFC">
+    <path id="bracket-left" fill-rule="evenodd" d="
+      M 60 64
+      h 40
+      v 22
+      h -18
+      v 84
+      h 18
+      v 22
+      h -40
+      z"/>
+    <path id="bracket-right" fill-rule="evenodd" d="
+      M 196 64
+      h -40
+      v 22
+      h 18
+      v 84
+      h -18
+      v 22
+      h 40
+      z"/>
+    <!-- Centered hash / number-sign (cite key marker) -->
+    <g id="hash" transform="translate(128 128)">
+      <!-- two vertical bars, slightly slanted -->
+      <polygon points="-22,-40 -8,-40 -1,40 -15,40"/>
+      <polygon points="6,-40 20,-40 27,40 13,40"/>
+      <!-- two horizontal bars -->
+      <rect x="-34" y="-20" width="68" height="14" rx="4"/>
+      <rect x="-34" y="8" width="68" height="14" rx="4"/>
+    </g>
+  </g>
+</svg>
