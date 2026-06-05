@@ -12,7 +12,6 @@ import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import {
     CitationResult,
-    CitationSource,
     ExtensionConfig,
 } from '../types';
 import { BibtexWriter } from '../bibtex/writer';
@@ -148,18 +147,23 @@ export class CitationPanel {
             const workspaceFolders = vscode.workspace.workspaceFolders;
             if (workspaceFolders && workspaceFolders.length > 0) {
                 const root = workspaceFolders[0].uri.fsPath;
+                // Write a BibTeX entry for every selected result, regardless of
+                // source. Semantic Scholar results carry a pre-built
+                // `bibtexEntry`; Zotero (and any other) results carry only
+                // structured fields, and BibtexWriter falls back to generating
+                // an entry from those. Gating on source previously meant
+                // selected Zotero suggestions produced a `\cite{}` whose key
+                // never landed in the .bib file.
                 for (const result of results) {
-                    if (result.source === CitationSource.SemanticScholar && result.bibtexEntry) {
-                        try {
-                            await this.bibtexWriter.writeEntry(
-                                result,
-                                root,
-                                config.suggestionsBibFile,
-                            );
-                        } catch (err) {
-                            const msg = err instanceof Error ? err.message : String(err);
-                            log.error(`Failed to write BibTeX for ${result.bibtexKey}: ${msg}`);
-                        }
+                    try {
+                        await this.bibtexWriter.writeEntry(
+                            result,
+                            root,
+                            config.suggestionsBibFile,
+                        );
+                    } catch (err) {
+                        const msg = err instanceof Error ? err.message : String(err);
+                        log.error(`Failed to write BibTeX for ${result.bibtexKey}: ${msg}`);
                     }
                 }
             }
