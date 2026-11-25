@@ -60,6 +60,7 @@ export function getConfig(): ExtensionConfig {
             provider: cfg.get<LLMProvider>('llm.provider', 'anthropic'),
             apiKey: cfg.get<string>('llm.apiKey', ''),
             model: cfg.get<string>('llm.model', ''),
+            baseUrl: cfg.get<string>('llm.baseUrl', ''),
         },
     };
 }

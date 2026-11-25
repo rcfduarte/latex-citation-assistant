@@ -20,6 +20,8 @@ export interface LLMConfig {
     apiKey: string;
     /** Optional model override (empty = use provider default). */
     model: string;
+    /** Base URL of an OpenAI-compatible server (empty = api.openai.com). OpenAI provider only. */
+    baseUrl: string;
 }
 
 /** A claim extracted from the writing context by the LLM. */

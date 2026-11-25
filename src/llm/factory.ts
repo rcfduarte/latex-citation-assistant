@@ -16,17 +16,19 @@ import { OpenAIProvider } from './openai';
  * @returns A configured provider, or null if LLM is disabled or unconfigured.
  */
 export function createLLMProvider(config: LLMConfig): LLMProviderInterface | null {
-    if (!config.enabled || !config.apiKey) {
+    if (!config.enabled) {
         return null;
     }
 
     const model = config.model || undefined;
+    const baseUrl = (config.baseUrl || '').trim();
 
     switch (config.provider) {
         case 'anthropic':
-            return new AnthropicProvider(config.apiKey, model);
+            return config.apiKey ? new AnthropicProvider(config.apiKey, model) : null;
         case 'openai':
-            return new OpenAIProvider(config.apiKey, model);
+            // A local OpenAI-compatible server (baseUrl set) may need no key.
+            return (config.apiKey || baseUrl) ? new OpenAIProvider(config.apiKey, model, baseUrl) : null;
         default:
             return null;
     }

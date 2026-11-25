@@ -102,6 +102,7 @@ All settings are under the `latexCite` namespace. Open Settings and search for "
 | `latexCite.llm.provider` | string | `"anthropic"` | LLM provider: `anthropic` (Claude Haiku) or `openai` (GPT-4o-mini) |
 | `latexCite.llm.apiKey` | string | `""` | API key for the selected LLM provider |
 | `latexCite.llm.model` | string | `""` | Optional model override (leave empty for provider defaults) |
+| `latexCite.llm.baseUrl` | string | `""` | Base URL of an OpenAI-compatible server including `/v1`, e.g. `http://127.0.0.1:11434/v1` (Ollama) or `http://127.0.0.1:4000/v1` (LiteLLM). Only for provider `openai`; empty means `https://api.openai.com/v1`. With a custom URL the API key may be empty, so a local model keeps the paragraph on your machine |
 
 ---
 

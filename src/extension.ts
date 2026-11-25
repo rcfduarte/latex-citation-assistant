@@ -76,7 +76,7 @@ export function activate(context: vscode.ExtensionContext): void {
     if (llmProvider) {
         log.info(`LLM provider initialised: ${llmProvider.name}`);
     } else if (config.llm.enabled) {
-        log.warn('LLM enabled but API key is missing');
+        log.warn('LLM enabled but not configured (API key missing, or for openai neither key nor baseUrl set)');
     }
     const engine = new SearchEngine(zoteroSource, s2Source, ranker, llmProvider);
     const bibtexWriter = new BibtexWriter();
